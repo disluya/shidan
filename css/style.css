@@ -109,9 +109,11 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .list-heading { display: block; }
 .list-heading-text { flex: 1; min-width: 0; }
 .list-heading h1 { margin: 0; font-size: clamp(20px, 5.5vw, 26px); line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
-.list-name-trigger { display: block; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; line-height: inherit; text-align: left; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+.list-name-trigger { position: relative; display: block; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; line-height: inherit; text-align: left; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+/* 扩大单行标题的触控高度，保留原标题位置与字号；上下不跨过相邻控件。 */
+.list-name-trigger::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: max(100%, 44px); transform: translateY(-50%); }
 .list-heading p { margin: 9px 0 0; font-size: 13px; line-height: 1.7; color: var(--app-muted); }
-.list-actions-popover.el-popper { min-width: 0; padding: 8px; border-radius: 14px; border-color: var(--app-border); background: var(--app-surface); }
+.list-actions-popover.el-popper { min-width: 0; padding: 8px; border-radius: 20px; border-color: var(--app-border); background: var(--app-surface); }
 .header-actions { display: flex; justify-content: center; gap: 4px; }
 .header-actions .touch-button { width: 44px; min-width: 44px; height: 44px; }
 .list-actions-slide-enter-active, .list-actions-slide-leave-active { transition: opacity var(--motion-ui) var(--motion-ease); }
@@ -143,7 +145,7 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .item-actions .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
 .item-actions .touch-button:active .el-icon { transform: rotate(-12deg) scale(0.9); }
 .item-actions .remove-button:active .el-icon { transform: rotate(90deg) scale(0.85); }
-.drag-handle.el-button { width: 32px; min-width: 32px; height: 48px; color: var(--app-muted); cursor: grab; touch-action: none; }
+.drag-handle.el-button { width: 44px; min-width: 44px; height: 48px; color: var(--app-muted); cursor: grab; touch-action: none; }
 .remove-button.el-button { color: var(--app-muted); }
 .remove-button.el-button:hover { color: var(--el-color-danger); }
 .main-empty.el-empty { min-height: 320px; height: 65%; padding: 40px 6px; }
@@ -176,6 +178,7 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .select-list-button.el-button > span { display: flex; align-items: center; justify-content: space-between; gap: 9px; width: 100%; min-width: 0; }
 .select-list-button span > span { overflow-wrap: anywhere; white-space: normal; text-align: left; line-height: 1.5; font-size: 16px; }
 .select-list-button small { flex: none; color: var(--app-muted); font-size: 12px; }
+.list-heading p, .drawer-heading h2 span, .select-list-button small, .filter-count { font-variant-numeric: tabular-nums; }
 .lists-drawer .el-drawer__footer { padding: 14px 20px max(20px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--app-border); }
 .drawer-add-button.el-button { min-height: 56px; }
 .create-dialog.el-dialog { max-width: 480px; border-radius: 24px; padding: 24px; margin-bottom: 0; max-height: 84dvh; overflow-y: auto; overscroll-behavior: contain; }
@@ -189,7 +192,7 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .create-dialog .el-dialog__headerbtn { right: 16px; top: 16px; }
 .create-dialog .el-dialog__headerbtn .el-dialog__close, .app-message-box .el-message-box__headerbtn .el-message-box__close { color: inherit; font-size: 22px; }
 .create-dialog .el-dialog__headerbtn .el-icon, .app-message-box .el-message-box__headerbtn .el-icon, .drawer-heading > .touch-button .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
-.create-dialog .el-dialog__headerbtn:active, .app-message-box .el-message-box__headerbtn:active, .drawer-heading > .touch-button:active { transform: scale(0.91); background: var(--el-color-primary-light-8); }
+.create-dialog .el-dialog__headerbtn:active, .app-message-box .el-message-box__headerbtn:active, .drawer-heading > .touch-button:active { transform: scale(0.96); background: var(--el-color-primary-light-8); }
 .create-dialog .el-dialog__headerbtn:active .el-icon, .app-message-box .el-message-box__headerbtn:active .el-icon, .drawer-heading > .touch-button:active .el-icon { transform: rotate(90deg); }
 @media (hover: hover) {
     .item-actions .touch-button.el-button:not(.is-disabled):hover { background: var(--el-color-primary-light-8); }
@@ -236,7 +239,7 @@ body.is-sorting { user-select: none; }
 .el-button, .list-name-trigger {
     transition: transform var(--motion-press) var(--motion-ease), background-color var(--motion-feedback) ease, border-color var(--motion-feedback) ease, color var(--motion-feedback) ease, opacity var(--motion-feedback) ease;
 }
-.el-button:not(.is-disabled):active, .list-name-trigger:active { transform: scale(0.95); }
+.el-button:not(.is-disabled):active, .list-name-trigger:active { transform: scale(0.96); }
 .wide-add-button.el-button:not(.is-disabled):active { transform: scale(0.96); }
 .wide-add-button .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
 .wide-add-button:active .el-icon { transform: rotate(90deg) scale(0.85); }
@@ -291,8 +294,9 @@ body, .shopping-app, .app-header, .add-dock, .item-row, .el-input__wrapper, .el-
 @keyframes theme-unfold { from { clip-path: circle(0px at var(--theme-x) var(--theme-y)); } to { clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y)); } }
 
 /* TransitionGroup 用稳定的条目 ID 执行增删与排序过渡。搜索输入时禁用列表过渡。 */
-.item-motion-enter-active, .list-motion-enter-active { transition: opacity var(--motion-ui) ease, transform var(--motion-ui) var(--motion-ease); }
-.item-motion-enter-active { transition-delay: var(--row-delay, 0ms); }
+.item-motion-enter-active, .item-motion-appear-active, .list-motion-enter-active { transition: opacity var(--motion-ui) ease, transform var(--motion-ui) var(--motion-ease); }
+/* 仅首次展示或切换清单时依次进入；新增条目立即开始进入动画。 */
+.item-motion-appear-active { transition-delay: var(--row-delay, 0ms); }
 .item-motion-leave-active, .list-motion-leave-active { position: absolute; left: 0; right: 0; pointer-events: none; transition: opacity var(--motion-feedback) ease, transform var(--motion-close) var(--motion-ease); }
 .item-motion-enter-from { opacity: 0; transform: translateY(28px) scale(0.95); }
 .list-motion-enter-from { opacity: 0; transform: translateX(-12px); }
@@ -330,15 +334,15 @@ body, .shopping-app, .app-header, .add-dock, .item-row, .el-input__wrapper, .el-
 /* 按下时优先回缩，覆盖悬停的抬升；不改变卡片尺寸或排序 transform。 */
 .wide-add-button.el-button:not(.is-disabled):active { transform: translateY(1px) scale(0.96); box-shadow: none; }
 .wide-add-button:active .el-icon { transform: rotate(90deg) scale(0.85); }
-.item-actions .touch-button.el-button:not(.is-disabled):active { transform: scale(0.91); }
+.item-actions .touch-button.el-button:not(.is-disabled):active { transform: scale(0.96); }
 .item-actions .touch-button:active .el-icon { transform: rotate(-14deg) scale(0.9); }
 .item-actions .remove-button:active .el-icon { transform: rotate(90deg) scale(0.85); }
 .item-row:has(.item-checkbox:active)::after { transform: scaleY(1); opacity: 1; }
-.item-checkbox:active .el-checkbox__input { transform: scale(0.92); }
+.item-checkbox:active .el-checkbox__input { transform: scale(0.96); }
 .select-list-button.el-button:active > span { transform: translateX(5px); }
 .menu-button:active .el-icon { transform: rotate(-9deg) scale(0.9); }
 .header-actions .touch-button:active .el-icon { transform: rotate(-10deg) scale(0.9); }
-.create-dialog .el-dialog__headerbtn:active, .app-message-box .el-message-box__headerbtn:active, .drawer-heading > .touch-button.el-button:active { transform: scale(0.91); box-shadow: none; }
+.create-dialog .el-dialog__headerbtn:active, .app-message-box .el-message-box__headerbtn:active, .drawer-heading > .touch-button.el-button:active { transform: scale(0.96); box-shadow: none; }
 
 @media (max-width: 360px) {
     .app-header { padding-left: 16px; padding-right: 16px; }

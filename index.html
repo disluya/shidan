@@ -49,7 +49,7 @@
                 </div>
             </header>
             <el-main class="items-scroll">
-                <transition-group v-if="activeList" :key="activeListId" appear name="item-motion" tag="ul" class="items-list" aria-label="清单物品">
+                <transition-group v-if="activeList" :key="activeListId" appear appear-active-class="item-motion-appear-active" name="item-motion" tag="ul" class="items-list" aria-label="清单物品">
                     <li v-for="(item, index) in activeList.items" :key="item.id" :style="{ '--row-delay': Math.min(index, 5) * 40 + 'ms' }" class="item-row" :class="{ completed: item.completed, 'is-dragging': drag.id === item.id, 'drag-target': drag.overId === item.id }" :data-sort-id="item.id" data-sort-kind="items">
                         <el-button text class="drag-handle touch-button" :aria-label="'拖动物品：' + item.name" @pointerdown="startDrag($event, 'items', item.id)"><app-icon name="grip" :size="17"></app-icon></el-button>
                         <el-checkbox :model-value="item.completed" class="item-checkbox" :aria-label="(item.completed ? '标记为未完成：' : '标记为已完成：') + item.name" @change="toggleItem(item.id)"><span class="item-name">{{ item.name }}</span></el-checkbox>
