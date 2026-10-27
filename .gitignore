@@ -1,0 +1,21 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.sln
+
+# If I ever decide to use npm for a linter or formatter like Prettier
+node_modules/
+package-lock.json
+
+# Local reference skills
+/skills/

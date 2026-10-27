@@ -1,0 +1,22 @@
+{
+  "name": "拾单",
+  "short_name": "拾单",
+  "description": "拾单，一款支持离线使用、在本机保存数据的采购清单应用。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "img/logo-192px.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/logo-512px.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

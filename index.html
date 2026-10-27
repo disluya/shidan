@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="description" content="拾单，一款支持离线使用、在本机保存数据的采购清单应用。">
+    <meta name="theme-color" content="#0f172a">
+    <title>拾单</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="img/logo-192px.png">
+    <!-- 先恢复主题。组件库随站点加载，不请求第三方 CDN。 -->
+    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="vendor/element-plus.css">
+    <link rel="stylesheet" href="vendor/element-plus-dark.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="vendor/vue.global.prod.js"></script>
+    <script defer src="vendor/element-plus.full.min.js"></script>
+    <script defer src="vendor/element-plus-zh-cn.min.js"></script>
+    <script defer src="js/store.js"></script>
+    <script defer src="js/app.js"></script>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <el-container class="shopping-app" direction="vertical">
+            <el-alert v-if="installPrompt" class="install-notice" title="将拾单安装到主屏幕，离线也能用" type="info" :closable="false">
+                <el-button text type="primary" @click="installApp">安装</el-button>
+                <el-button text aria-label="关闭安装提示" @click="installPrompt = null"><app-icon name="close"></app-icon></el-button>
+            </el-alert>
+            <header class="app-header">
+                <div class="topbar">
+                    <el-button class="touch-button menu-button" text aria-label="打开清单菜单" @click="drawerOpen = true"><app-icon name="menu" :size="23"></app-icon></el-button>
+                    <span class="app-wordmark">拾单</span>
+                    <el-button class="touch-button theme-toggle" text :aria-label="themeLabel" :title="themeLabel" @click="toggleTheme"><app-icon name="theme" :size="19"></app-icon></el-button>
+                </div>
+                <div class="list-heading">
+                    <div class="list-heading-text">
+                        <h1 id="current-list-title">
+                            <el-popover v-if="activeList" v-model:visible="listActionsOpen" trigger="click" placement="bottom-end" :width="112" :show-arrow="false" :hide-after="0" popper-class="list-actions-popover" transition="list-actions-slide">
+                                <template #reference><button type="button" class="list-name-trigger" :title="activeList.name" :aria-expanded="listActionsOpen" aria-controls="list-header-actions" @keydown.esc.stop.prevent="listActionsOpen = false">{{ activeList.name }}</button></template>
+                                <div id="list-header-actions" class="header-actions" @keydown.esc.stop.prevent="listActionsOpen = false">
+                                    <el-button class="touch-button" text aria-label="重命名清单" title="重命名清单" @click="listActionsOpen = false; renameList()"><app-icon name="edit"></app-icon></el-button>
+                                    <el-button class="touch-button" text aria-label="复制清单" title="复制清单" @click="listActionsOpen = false; copyList()"><app-icon name="copy"></app-icon></el-button>
+                                </div>
+                            </el-popover>
+                            <template v-else>拾单</template>
+                        </h1>
+                        <p v-if="activeList && activeList.items.length">{{ remainingCount }} 件待买 · {{ completedCount }} 件已完成</p>
+                    </div>
+                </div>
+            </header>
+            <el-main class="items-scroll">
+                <transition-group v-if="activeList" :key="activeListId" appear name="item-motion" tag="ul" class="items-list" aria-label="清单物品">
+                    <li v-for="(item, index) in activeList.items" :key="item.id" :style="{ '--row-delay': Math.min(index, 5) * 40 + 'ms' }" class="item-row" :class="{ completed: item.completed, 'is-dragging': drag.id === item.id, 'drag-target': drag.overId === item.id }" :data-sort-id="item.id" data-sort-kind="items">
+                        <el-button text class="drag-handle touch-button" :aria-label="'拖动物品：' + item.name" @pointerdown="startDrag($event, 'items', item.id)"><app-icon name="grip" :size="17"></app-icon></el-button>
+                        <el-checkbox :model-value="item.completed" class="item-checkbox" :aria-label="(item.completed ? '标记为未完成：' : '标记为已完成：') + item.name" @change="toggleItem(item.id)"><span class="item-name">{{ item.name }}</span></el-checkbox>
+                        <div class="item-actions">
+                            <el-button text class="touch-button" :aria-label="'编辑物品：' + item.name" @click="renameItem(item)"><app-icon name="edit" :size="18"></app-icon></el-button>
+                            <el-button text class="touch-button remove-button" :aria-label="'删除物品：' + item.name" @click="deleteItem(item.id)"><app-icon name="close" :size="18"></app-icon></el-button>
+                        </div>
+                    </li>
+                </transition-group>
+                <el-empty v-if="!activeList || !activeList.items.length" class="main-empty" :image-size="106" :description="activeList ? '暂无物品' : '暂无清单'">
+                    <template #image><div class="empty-illustration"><app-icon name="bag" :size="56"></app-icon><span class="empty-spark">✦</span></div></template>
+                    <p>{{ activeList ? '点击下方「添加物品」' : '点击下方「新建清单」' }}</p>
+                </el-empty>
+            </el-main>
+            <footer class="add-dock">
+                <el-button id="open-create-btn" type="primary" size="large" class="wide-add-button" @click="activeList ? openItemCreate() : openListCreate()"><app-icon name="plus" :size="24"></app-icon><span>{{ activeList ? '添加物品' : '新建清单' }}</span></el-button>
+            </footer>
+        </el-container>
+        <el-drawer v-model="drawerOpen" class="lists-drawer" title="我的清单" direction="ltr" size="min(88vw, 360px)" :show-close="false">
+            <template #header="{ titleId, titleClass }">
+                <div class="drawer-heading">
+                    <div><h2 :id="titleId" :class="titleClass">我的清单 <span>{{ lists.length }}</span></h2></div>
+                    <el-button text class="touch-button" aria-label="关闭清单菜单" @click="drawerOpen = false"><app-icon name="close" :size="23"></app-icon></el-button>
+                </div>
+            </template>
+            <div class="list-filter">
+                <el-input v-model="listQuery" size="large" clearable placeholder="请输入搜索的清单名" aria-label="搜索清单" autocomplete="off"><template #prefix><app-icon name="search" :size="20"></app-icon></template></el-input>
+                <p v-if="listQuery.trim()" class="filter-count">找到 {{ filteredLists.length }} 个清单</p>
+            </div>
+            <nav class="drawer-list-scroll" aria-label="清单列表">
+                <transition-group name="list-motion" tag="ul" class="drawer-lists" :css="!listQuery.trim()">
+                    <li v-for="list in filteredLists" :key="list.id" class="drawer-list-row" :class="{ active: list.id === activeListId, 'is-dragging': drag.id === list.id, 'drag-target': drag.overId === list.id }" :data-sort-id="list.id" data-sort-kind="lists">
+                        <el-button text class="drag-handle touch-button" :disabled="Boolean(listQuery.trim())" :aria-label="'拖动清单：' + list.name" @pointerdown="startDrag($event, 'lists', list.id)"><app-icon name="grip" :size="17"></app-icon></el-button>
+                        <el-button text class="select-list-button" :aria-current="list.id === activeListId ? 'page' : null" @click="selectList(list.id)"><span>{{ list.name }}</span><small>{{ list.items.length }}</small></el-button>
+                        <el-button text class="touch-button remove-button" :aria-label="'删除清单：' + list.name" @click="deleteList(list)"><app-icon name="trash" :size="18"></app-icon></el-button>
+                    </li>
+                </transition-group>
+                <el-empty v-if="!filteredLists.length" :image-size="76" :description="listQuery.trim() ? '没有找到匹配的清单' : '还没有清单'"></el-empty>
+            </nav>
+            <template #footer><el-button type="primary" size="large" class="wide-add-button drawer-add-button" @click="openListCreate"><app-icon name="plus" :size="23"></app-icon><span>新建清单</span></el-button></template>
+        </el-drawer>
+        <el-dialog v-model="itemCreate.open" class="create-dialog" title="添加物品" width="calc(100% - 32px)" top="8vh" :close-on-click-modal="false" @opened="focusItemInput">
+            <el-form id="create-item-form" label-position="top" @submit.prevent="submitItem">
+                <!-- 暂停跨清单选择。恢复时同步启用 app.js 中预留的 listId 状态和提交逻辑。
+                <el-form-item label="添加到清单">
+                    <el-select v-model="itemCreate.listId" size="large" placeholder="请选择清单" aria-label="添加到清单" :teleported="false" @change="resetItemError"><el-option v-for="list in lists" :key="list.id" :label="list.name" :value="list.id"></el-option></el-select>
+                </el-form-item>
+                -->
+                <el-form-item label="物品名称" :error="itemCreate.error">
+                    <el-input ref="itemNameInput" v-model="itemCreate.name" size="large" placeholder="请输入物品名称" aria-label="物品名称" autocomplete="off" @input="resetItemError"></el-input>
+                </el-form-item>
+                <div class="create-actions">
+                    <el-button type="primary" native-type="submit" size="large" class="wide-add-button" :loading="itemCreate.saving">添加物品</el-button>
+                    <el-button text size="large" class="cancel-create" @click="itemCreate.open = false">取消</el-button>
+                </div>
+            </el-form>
+        </el-dialog>
+        <el-dialog v-model="listCreate.open" class="create-dialog list-create-dialog" title="新建清单" width="calc(100% - 32px)" top="8vh" :close-on-click-modal="false" @opened="focusListInput">
+            <el-form id="create-list-form" label-position="top" @submit.prevent="submitList">
+                <el-form-item label="清单名称" :error="listCreate.error">
+                    <el-input ref="listNameInput" v-model="listCreate.name" class="list-name-input" size="large" :placeholder="listNamePrefix ? '请输入清单名称（选填）' : '请输入清单名称'" aria-label="清单名称" autocomplete="off" @input="resetListError">
+                        <template v-if="listNamePrefix" #prefix><span class="inline-name-prefix" aria-label="固定名称前缀">{{ listNamePrefix }}{{ listCreate.name.trim() ? '-' : '' }}</span></template>
+                    </el-input>
+                </el-form-item>
+                <div class="name-template-options" role="group" aria-label="清单名称前缀选项">
+                    <el-checkbox v-model="listCreate.useDate" border size="large" class="template-option" aria-label="加入日期" @change="resetListError">日期</el-checkbox>
+                    <el-checkbox v-model="listCreate.useTime" border size="large" class="template-option" aria-label="加入时间" @change="resetListError">时间</el-checkbox>
+                    <div class="mall-option" :class="{ 'is-checked': listCreate.useMall }">
+                        <el-checkbox v-model="listCreate.useMall" size="large" class="mall-checkbox" aria-label="加入常用商场" @change="resetListError">商场</el-checkbox>
+                        <el-dropdown trigger="click" placement="bottom-end" :teleported="false" popper-class="mall-menu" @command="selectMall" @visible-change="mallMenuOpen = $event">
+                            <el-button class="mall-select-button" text native-type="button" aria-label="更换常用商场" :aria-expanded="mallMenuOpen"><app-icon name="chevronDown" :size="20"></app-icon></el-button>
+                            <template #dropdown><el-dropdown-menu><el-dropdown-item v-for="mall in mallOptions" :key="mall" :command="mall"><span>{{ mall }}</span><app-icon v-if="mall === mallName" name="check" :size="17"></app-icon></el-dropdown-item></el-dropdown-menu></template>
+                        </el-dropdown>
+                    </div>
+                </div>
+                <div class="create-actions">
+                    <el-button type="primary" native-type="submit" size="large" class="wide-add-button" :loading="listCreate.saving">新建清单</el-button>
+                    <el-button text size="large" class="cancel-create" @click="listCreate.open = false">取消</el-button>
+                </div>
+            </el-form>
+        </el-dialog>
+    </div>
+    <noscript>请启用 JavaScript 后使用拾单。</noscript>
+</body>
+</html>
