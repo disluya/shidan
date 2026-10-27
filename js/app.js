@@ -36,7 +36,9 @@
                     // listId: null, // 预留：恢复跨清单选择时启用。
                     name: '', error: '', saving: false
                 },
-                listCreate: { open: false, name: '', date: '', time: '', useDate: true, useTime: false, useMall: false, error: '', saving: false },
+                listCreate: { open: false, name: '', date: '', dateYear: null, time: '', useDate: true, useTime: false, useMall: false, error: '', saving: false },
+                timePicker: { open: false, step: 'hour', hour: 0, minute: null },
+                datePicker: { open: false, step: 'month', year: new Date().getFullYear(), month: 1, day: null },
                 mallOptions: Store.getMallOptions(),
                 mallName: Store.getPreferredMall(),
                 mallMenuOpen: false,
@@ -70,6 +72,9 @@
                 if (this.listCreate.useTime) parts.push(this.listCreate.time);
                 if (this.listCreate.useMall) parts.push(this.mallName);
                 return parts.filter(Boolean).join('-');
+            },
+            datePickerDays() {
+                return new Date(this.datePicker.year, this.datePicker.month, 0).getDate();
             }
         },
         mounted() {
@@ -125,11 +130,14 @@
                 this.drawerOpen = false;
                 this.itemCreate.open = false;
                 this.mallMenuOpen = false;
+                this.timePicker.open = false;
+                this.datePicker.open = false;
                 // 在打开时取设备本地时间，编辑期间保持稳定，不让前缀自动跳动。
                 const now = new Date();
                 this.listCreate = {
                     open: true, name: '',
                     date: (now.getMonth() + 1) + '月' + now.getDate() + '日',
+                    dateYear: now.getFullYear(),
                     time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
                     useDate: true, useTime: false, useMall: false, error: '', saving: false
                 };
@@ -138,7 +146,7 @@
                 this.$refs.itemNameInput?.focus();
             },
             focusListInput() {
-                this.$refs.listNameInput?.focus();
+                if (!this.timePicker.open && !this.datePicker.open) this.$refs.listNameInput?.focus();
             },
             resetItemError() {
                 this.itemCreate.error = '';
@@ -387,6 +395,69 @@
                 document.addEventListener('pointermove', onMove, { passive: false });
                 document.addEventListener('pointerup', onEnd);
                 document.addEventListener('pointercancel', onEnd);
+            },
+            formatTimePart(value) {
+                return value === null ? '--' : String(value).padStart(2, '0');
+            },
+            openTimePicker() {
+                if (!this.listCreate.open) return;
+                this.datePicker.open = false;
+                const [hour, minute] = this.listCreate.time.split(':').map(Number);
+                // 草稿与清单前缀分开；原有分钟不在刻度内时，不静默取整。
+                this.timePicker = { open: true, step: 'hour', hour, minute: minute % 5 === 0 ? minute : null };
+            },
+            selectTimeHour(hour) {
+                if (!this.timePicker.open || !Number.isInteger(hour) || hour < 0 || hour > 23) return;
+                this.timePicker.hour = hour;
+                this.timePicker.step = 'minute';
+            },
+            selectTimeMinute(minute) {
+                if (!this.timePicker.open || this.timePicker.step !== 'minute' || !Number.isInteger(minute) || minute < 0 || minute > 55 || minute % 5 !== 0) return;
+                this.timePicker.minute = minute;
+            },
+            confirmTimePicker() {
+                const { hour, minute, step } = this.timePicker;
+                if (!this.timePicker.open || !this.listCreate.open || step !== 'minute' || !Number.isInteger(hour) || hour < 0 || hour > 23 || !Number.isInteger(minute) || minute < 0 || minute > 55 || minute % 5 !== 0) return;
+                this.listCreate.time = this.formatTimePart(hour) + ':' + this.formatTimePart(minute);
+                this.resetListError();
+                this.timePicker.open = false;
+            },
+            focusTimeChoice() {
+                if (!this.timePicker.open || !this.listCreate.open) return;
+                const grid = this.$refs.timeGrid;
+                const choice = grid?.querySelector('[aria-pressed="true"]') || grid?.querySelector('button');
+                choice?.focus({ preventScroll: true });
+            },
+            openDatePicker() {
+                if (!this.listCreate.open) return;
+                const parts = this.listCreate.date.match(/^(\d{1,2})月(\d{1,2})日$/);
+                if (!parts) return;
+                this.timePicker.open = false;
+                // 年份仅用于验证月份天数，不加入清单名称。
+                this.datePicker = { open: true, step: 'month', year: this.listCreate.dateYear, month: Number(parts[1]), day: Number(parts[2]) };
+            },
+            selectDateMonth(month) {
+                if (!this.datePicker.open || !Number.isInteger(month) || month < 1 || month > 12) return;
+                this.datePicker.month = month;
+                if (this.datePicker.day > this.datePickerDays) this.datePicker.day = null;
+                this.datePicker.step = 'day';
+            },
+            selectDateDay(day) {
+                if (!this.datePicker.open || this.datePicker.step !== 'day' || !Number.isInteger(day) || day < 1 || day > this.datePickerDays) return;
+                this.datePicker.day = day;
+            },
+            confirmDatePicker() {
+                const { year, month, day, step } = this.datePicker;
+                if (!this.datePicker.open || !this.listCreate.open || step !== 'day' || !Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > this.datePickerDays) return;
+                this.listCreate.date = month + '月' + day + '日';
+                this.resetListError();
+                this.datePicker.open = false;
+            },
+            focusDateChoice() {
+                if (!this.datePicker.open || !this.listCreate.open) return;
+                const grid = this.$refs.dateGrid;
+                const choice = grid?.querySelector('[aria-pressed="true"]') || grid?.querySelector('button');
+                choice?.focus({ preventScroll: true });
             }
         }
     });

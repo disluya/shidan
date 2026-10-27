@@ -210,17 +210,38 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .list-name-input .el-input__prefix { flex: none; max-width: 100%; height: auto; margin-right: 0; }
 .list-name-input .inline-name-prefix { color: var(--app-text); font-size: 14px; line-height: 1.8; white-space: normal; overflow-wrap: anywhere; }
 .list-name-input .el-input__inner { flex: 1 1 72px; width: 0; min-width: 72px; }
-.name-template-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.45fr); gap: 8px; }
+.name-template-options { display: grid; grid-template-columns: repeat(3, minmax(116px, 1fr)); gap: 8px; }
+/* 保留原生复选框语义，仅去掉视觉方框；整个选项仍可点击和键盘切换。 */
+.name-template-options .el-checkbox__input { position: absolute; opacity: 0; pointer-events: none; }
+.name-template-options .el-checkbox { justify-content: center; }
+.name-template-options .el-checkbox:has(.el-checkbox__original:focus-visible) { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
 .name-template-options .el-checkbox__input:not(.is-checked) .el-checkbox__inner { border-color: var(--app-muted); background: transparent; }
 .template-option.el-checkbox.is-bordered { width: 100%; min-width: 0; height: 50px; margin: 0; padding: 0 8px; border-radius: 12px; background: var(--app-soft); }
 .template-option.el-checkbox.is-bordered.is-checked { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
-.template-option .el-checkbox__label, .mall-checkbox .el-checkbox__label { min-width: 0; padding-left: 6px; color: var(--app-text); font-size: 13px; }
-.template-option.el-checkbox.is-checked .el-checkbox__label, .mall-checkbox.el-checkbox.is-checked .el-checkbox__label { color: var(--app-text); }
-.mall-option { display: flex; align-items: stretch; min-width: 0; min-height: 50px; border: 1px solid var(--el-border-color); border-radius: 12px; background: var(--app-soft); }
-.mall-option.is-checked { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
-.mall-checkbox.el-checkbox { flex: 1; min-width: 0; height: auto; min-height: 48px; margin: 0; padding: 0 6px; }
+.template-option .el-checkbox__label, .mall-checkbox .el-checkbox__label, .time-checkbox .el-checkbox__label, .date-checkbox .el-checkbox__label { min-width: 0; padding-left: 0; color: var(--app-text); font-size: 13px; }
+.template-option.el-checkbox.is-checked .el-checkbox__label, .mall-checkbox.el-checkbox.is-checked .el-checkbox__label, .time-checkbox.el-checkbox.is-checked .el-checkbox__label, .date-checkbox.el-checkbox.is-checked .el-checkbox__label { color: var(--app-control-ink); font-weight: 600; }
+.mall-option, .time-option, .date-option { display: flex; align-items: stretch; min-width: 0; min-height: 50px; border: 1px solid var(--el-border-color); border-radius: 12px; background: var(--app-soft); }
+.mall-option.is-checked, .time-option.is-checked, .date-option.is-checked { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
+.mall-checkbox.el-checkbox, .time-checkbox.el-checkbox, .date-checkbox.el-checkbox { flex: 1; min-width: 0; height: auto; min-height: 48px; margin: 0; padding: 0 6px; border-radius: 11px 0 0 11px; }
 .mall-option > .el-dropdown { flex: none; display: flex; align-items: stretch; border-left: 1px solid var(--app-border); }
-.mall-select-button.el-button { width: 44px; min-width: 44px; height: auto; min-height: 48px; padding: 0; border-radius: 0 11px 11px 0; }
+.mall-select-button.el-button, .time-edit-button.el-button, .date-edit-button.el-button { width: 44px; min-width: 44px; height: auto; min-height: 48px; padding: 0; border-radius: 0 11px 11px 0; }
+.time-edit-button.el-button, .date-edit-button.el-button { border-left: 1px solid var(--app-border); }
+.time-picker-dialog .el-dialog__body { overflow: hidden; }
+.time-preview { display: flex; align-items: center; gap: 8px; height: 48px; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.time-part.el-button { flex: 1; min-width: 0; height: 48px; margin: 0; border-radius: 12px; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--app-muted); }
+.time-part.el-button.is-current { background: var(--el-color-primary-light-9); color: var(--app-control-ink); }
+.time-step-label { margin: 0 0 10px; color: var(--app-secondary); font-size: 13px; line-height: 20px; }
+.time-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 44px; gap: 6px; align-content: center; height: 294px; }
+.time-number.el-button { min-width: 0; width: 100%; height: 44px; margin: 0; padding: 0; border-radius: 12px; background: var(--app-soft); color: var(--app-text); font-size: 16px; font-variant-numeric: tabular-nums; }
+.time-number.el-button.is-selected { background: var(--el-color-primary); border-color: var(--el-color-primary); color: #fff; font-weight: 600; }
+.time-picker-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.time-picker-actions .el-button { width: 100%; min-width: 0; height: 48px; margin: 0; border-radius: 14px; }
+.time-step-enter-active, .time-step-leave-active { transition: opacity 140ms ease-out, transform 140ms var(--motion-ease); }
+.time-step-enter-from { opacity: 0; transform: translateX(12px); }
+.time-step-leave-to { opacity: 0; transform: translateX(-8px); }
+/* 五列保证 320px 屏幕上每格仍大于 44px，同时容纳一个月的全部日期。 */
+.date-picker-dialog.el-dialog { padding: 20px; max-height: calc(100dvh - 32px); }
+.date-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); height: 344px; }
 .mall-menu .el-dropdown-menu__item { display: flex; justify-content: space-between; gap: 28px; min-width: 140px; min-height: 48px; font-size: 15px; }
 .mall-menu .el-dropdown-menu__item .el-icon { margin-right: 0; color: var(--el-color-primary); }
 .app-message-box.el-message-box { width: calc(100vw - 32px); max-width: 420px; border-radius: 20px; padding: 22px; }
@@ -245,10 +266,10 @@ body.is-sorting { user-select: none; }
 .wide-add-button:active .el-icon { transform: rotate(90deg) scale(0.85); }
 .theme-toggle .el-icon { transition: transform 380ms var(--motion-ease); }
 :root[data-theme="dark"] .theme-toggle .el-icon { transform: rotate(180deg); }
-.mall-select-button .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
-.mall-select-button[aria-expanded="true"] .el-icon { transform: rotate(180deg); }
-.template-option, .mall-option { transition: transform var(--motion-press) var(--motion-ease), background-color var(--motion-feedback) ease, border-color var(--motion-feedback) ease; }
-.template-option:active, .mall-option:active { transform: scale(0.98); }
+.mall-select-button .el-icon, .time-edit-button .el-icon, .date-edit-button .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
+.mall-select-button[aria-expanded="true"] .el-icon, .time-edit-button[aria-expanded="true"] .el-icon, .date-edit-button[aria-expanded="true"] .el-icon { transform: rotate(180deg); }
+.template-option, .mall-option, .time-option, .date-option { transition: transform var(--motion-press) var(--motion-ease), background-color var(--motion-feedback) ease, border-color var(--motion-feedback) ease; }
+.template-option:active, .mall-option:active, .time-option:active, .date-option:active { transform: scale(0.98); }
 .item-checkbox .el-checkbox__input.is-checked .el-checkbox__inner { animation: check-confirm var(--motion-ui) var(--motion-ease); }
 @keyframes check-confirm { 0% { transform: scale(0.65) rotate(-18deg); } 65% { transform: scale(1.12) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
 .item-row { position: relative; isolation: isolate; }
@@ -328,7 +349,7 @@ body, .shopping-app, .app-header, .add-dock, .item-row, .el-input__wrapper, .el-
     .menu-button:hover .el-icon { transform: rotate(-9deg) scale(1.15); }
     .theme-toggle:hover svg { transform: rotate(45deg) scale(1.12); }
     .header-actions .touch-button:hover .el-icon { transform: translateY(-2px) rotate(-10deg) scale(1.1); }
-    .template-option.el-checkbox.is-bordered:hover, .mall-option:hover { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
+    .template-option.el-checkbox.is-bordered:hover, .mall-option:hover, .time-option:hover, .date-option:hover { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
     .create-dialog .el-dialog__headerbtn:hover, .app-message-box .el-message-box__headerbtn:hover, .drawer-heading > .touch-button.el-button:hover { transform: translateY(-2px); background: var(--el-color-primary-light-8); box-shadow: 0 7px 16px -9px var(--el-color-primary); }
 }
 /* 按下时优先回缩，覆盖悬停的抬升；不改变卡片尺寸或排序 transform。 */
@@ -344,6 +365,10 @@ body, .shopping-app, .app-header, .add-dock, .item-row, .el-input__wrapper, .el-
 .header-actions .touch-button:active .el-icon { transform: rotate(-10deg) scale(0.9); }
 .create-dialog .el-dialog__headerbtn:active, .app-message-box .el-message-box__headerbtn:active, .drawer-heading > .touch-button.el-button:active { transform: scale(0.96); box-shadow: none; }
 
+/* 窄屏换成两列，商场仍占一个单元格，保证三个选项等宽。 */
+@media (max-width: 443px) {
+    .name-template-options { grid-template-columns: repeat(2, minmax(116px, 1fr)); }
+}
 @media (max-width: 360px) {
     .app-header { padding-left: 16px; padding-right: 16px; }
     .list-heading h1 { font-size: 20px; }

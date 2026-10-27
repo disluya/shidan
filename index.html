@@ -107,7 +107,7 @@
                 </div>
             </el-form>
         </el-dialog>
-        <el-dialog v-model="listCreate.open" class="create-dialog list-create-dialog" title="新建清单" width="calc(100% - 32px)" top="8vh" :close-on-click-modal="false" @opened="focusListInput">
+        <el-dialog v-model="listCreate.open" class="create-dialog list-create-dialog" title="新建清单" width="calc(100% - 32px)" top="8vh" :close-on-click-modal="false" @opened="focusListInput" @close="timePicker.open = false; datePicker.open = false">
             <el-form id="create-list-form" label-position="top" @submit.prevent="submitList">
                 <el-form-item label="清单名称" :error="listCreate.error">
                     <el-input ref="listNameInput" v-model="listCreate.name" class="list-name-input" size="large" :placeholder="listNamePrefix ? '请输入清单名称（选填）' : '请输入清单名称'" aria-label="清单名称" autocomplete="off" @input="resetListError">
@@ -115,10 +115,16 @@
                     </el-input>
                 </el-form-item>
                 <div class="name-template-options" role="group" aria-label="清单名称前缀选项">
-                    <el-checkbox v-model="listCreate.useDate" border size="large" class="template-option" aria-label="加入日期" @change="resetListError">日期</el-checkbox>
-                    <el-checkbox v-model="listCreate.useTime" border size="large" class="template-option" aria-label="加入时间" @change="resetListError">时间</el-checkbox>
+                    <div class="date-option" :class="{ 'is-checked': listCreate.useDate }">
+                        <el-checkbox v-model="listCreate.useDate" size="large" class="date-checkbox" aria-label="加入日期" @change="resetListError">日期</el-checkbox>
+                        <el-button class="date-edit-button" text native-type="button" aria-label="修改日期" :aria-expanded="datePicker.open" @click="openDatePicker"><app-icon name="chevronDown" :size="20"></app-icon></el-button>
+                    </div>
+                    <div class="time-option" :class="{ 'is-checked': listCreate.useTime }">
+                        <el-checkbox v-model="listCreate.useTime" size="large" class="time-checkbox" aria-label="加入时间" @change="resetListError">时间</el-checkbox>
+                        <el-button class="time-edit-button" text native-type="button" aria-label="修改时间" :aria-expanded="timePicker.open" @click="openTimePicker"><app-icon name="chevronDown" :size="20"></app-icon></el-button>
+                    </div>
                     <div class="mall-option" :class="{ 'is-checked': listCreate.useMall }">
-                        <el-checkbox v-model="listCreate.useMall" size="large" class="mall-checkbox" aria-label="加入常用商场" @change="resetListError">商场</el-checkbox>
+                        <el-checkbox v-model="listCreate.useMall" size="large" class="mall-checkbox" :aria-label="'加入' + mallName" @change="resetListError">{{ mallName }}</el-checkbox>
                         <el-dropdown trigger="click" placement="bottom-end" :teleported="false" popper-class="mall-menu" @command="selectMall" @visible-change="mallMenuOpen = $event">
                             <el-button class="mall-select-button" text native-type="button" aria-label="更换常用商场" :aria-expanded="mallMenuOpen"><app-icon name="chevronDown" :size="20"></app-icon></el-button>
                             <template #dropdown><el-dropdown-menu><el-dropdown-item v-for="mall in mallOptions" :key="mall" :command="mall"><span>{{ mall }}</span><app-icon v-if="mall === mallName" name="check" :size="17"></app-icon></el-dropdown-item></el-dropdown-menu></template>
@@ -130,6 +136,47 @@
                     <el-button text size="large" class="cancel-create" @click="listCreate.open = false">取消</el-button>
                 </div>
             </el-form>
+        </el-dialog>
+        <el-dialog v-model="timePicker.open" class="create-dialog time-picker-dialog" title="选择时间" width="calc(100% - 32px)" top="4vh" :close-on-click-modal="false" append-to-body @opened="focusTimeChoice">
+            <div class="time-preview" aria-label="时间预览">
+                <el-button text class="time-part" :class="{ 'is-current': timePicker.step === 'hour' }" :aria-pressed="timePicker.step === 'hour'" aria-label="选择小时" @click="timePicker.step = 'hour'">{{ formatTimePart(timePicker.hour) }}</el-button>
+                <span aria-hidden="true">:</span>
+                <el-button text class="time-part" :class="{ 'is-current': timePicker.step === 'minute' }" :aria-pressed="timePicker.step === 'minute'" aria-label="选择分钟" @click="timePicker.step = 'minute'">{{ formatTimePart(timePicker.minute) }}</el-button>
+            </div>
+            <p class="time-step-label" aria-live="polite">{{ timePicker.step === 'hour' ? '选择小时' : '选择分钟（每格 5 分钟）' }}</p>
+            <transition name="time-step" mode="out-in" @after-enter="focusTimeChoice">
+                <div v-if="timePicker.step === 'hour'" ref="timeGrid" key="hour" class="time-grid" role="group" aria-label="小时选项">
+                    <el-button v-for="hour in 24" :key="hour" class="time-number" :class="{ 'is-selected': timePicker.hour === hour - 1 }" :aria-pressed="timePicker.hour === hour - 1" :aria-label="formatTimePart(hour - 1) + '时'" @click="selectTimeHour(hour - 1)">{{ formatTimePart(hour - 1) }}</el-button>
+                </div>
+                <div v-else ref="timeGrid" key="minute" class="time-grid" role="group" aria-label="分钟选项">
+                    <el-button v-for="minute in 12" :key="minute" class="time-number" :class="{ 'is-selected': timePicker.minute === (minute - 1) * 5 }" :aria-pressed="timePicker.minute === (minute - 1) * 5" :aria-label="formatTimePart((minute - 1) * 5) + '分'" @click="selectTimeMinute((minute - 1) * 5)">{{ formatTimePart((minute - 1) * 5) }}</el-button>
+                </div>
+            </transition>
+            <div class="time-picker-actions">
+                <el-button native-type="button" @click="timePicker.open = false">取消</el-button>
+                <el-button type="primary" native-type="button" :disabled="timePicker.step !== 'minute' || timePicker.minute === null" @click="confirmTimePicker">确认</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog v-model="datePicker.open" class="create-dialog time-picker-dialog date-picker-dialog" title="选择日期" width="calc(100% - 32px)" top="16px" :close-on-click-modal="false" append-to-body @opened="focusDateChoice">
+            <div class="time-preview" aria-label="日期预览">
+                <el-button text class="time-part" :class="{ 'is-current': datePicker.step === 'month' }" :aria-pressed="datePicker.step === 'month'" aria-label="选择月份" @click="datePicker.step = 'month'">{{ formatTimePart(datePicker.month) }}</el-button>
+                <span aria-hidden="true">月</span>
+                <el-button text class="time-part" :class="{ 'is-current': datePicker.step === 'day' }" :aria-pressed="datePicker.step === 'day'" aria-label="选择日" @click="datePicker.step = 'day'">{{ formatTimePart(datePicker.day) }}</el-button>
+                <span aria-hidden="true">日</span>
+            </div>
+            <p class="time-step-label" aria-live="polite">{{ datePicker.step === 'month' ? '选择月份' : '选择日期' }}</p>
+            <transition name="time-step" mode="out-in" @after-enter="focusDateChoice">
+                <div v-if="datePicker.step === 'month'" ref="dateGrid" key="month" class="time-grid date-grid" role="group" aria-label="月份选项">
+                    <el-button v-for="month in 12" :key="month" class="time-number" :class="{ 'is-selected': datePicker.month === month }" :aria-pressed="datePicker.month === month" :aria-label="month + '月'" @click="selectDateMonth(month)">{{ month }}月</el-button>
+                </div>
+                <div v-else ref="dateGrid" key="day" class="time-grid date-grid" role="group" aria-label="日期选项">
+                    <el-button v-for="day in datePickerDays" :key="day" class="time-number" :class="{ 'is-selected': datePicker.day === day }" :aria-pressed="datePicker.day === day" :aria-label="day + '日'" @click="selectDateDay(day)">{{ day }}</el-button>
+                </div>
+            </transition>
+            <div class="time-picker-actions">
+                <el-button native-type="button" @click="datePicker.open = false">取消</el-button>
+                <el-button type="primary" native-type="button" :disabled="datePicker.step !== 'day' || datePicker.day === null" @click="confirmDatePicker">确认</el-button>
+            </div>
         </el-dialog>
     </div>
     <noscript>请启用 JavaScript 后使用拾单。</noscript>
