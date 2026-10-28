@@ -2,16 +2,18 @@
 (() => {
     const THEME_KEY = 'shopping_list_theme';
     const root = document.documentElement;
+    const themes = ['light', 'dark', 'colorful'];
     function applyTheme(theme) {
         root.dataset.theme = theme;
         // Element Plus 用 dark 类启用深色组件，与本项目的主题名称相反。
         root.classList.toggle('dark', theme === 'light');
-        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#ffffff' : '#0f172a';
+        document.querySelector('meta[name="theme-color"]').content = theme === 'colorful' ? '#8b5cf6' : theme === 'dark' ? '#ffffff' : '#0f172a';
         return theme;
     }
     let savedTheme = 'light';
     try {
-        savedTheme = localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+        const storedTheme = localStorage.getItem(THEME_KEY);
+        savedTheme = themes.includes(storedTheme) ? storedTheme : 'light';
     } catch (error) {
         // 存储受限时，仍可使用默认主题。
     }
@@ -19,7 +21,7 @@
     window.AppTheme = Object.freeze({
         current: () => root.dataset.theme,
         toggle() {
-            const theme = applyTheme(root.dataset.theme === 'light' ? 'dark' : 'light');
+            const theme = applyTheme(themes[(themes.indexOf(root.dataset.theme) + 1) % themes.length]);
             try {
                 localStorage.setItem(THEME_KEY, theme);
             } catch (error) {

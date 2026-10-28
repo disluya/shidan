@@ -65,7 +65,9 @@
                 return query ? this.lists.filter(list => list.name.toLocaleLowerCase().includes(query)) : this.lists;
             },
             themeLabel() {
-                return this.theme === 'dark' ? '切换为深底主题' : '切换为白底主题';
+                const names = { light: '深色', dark: '浅色', colorful: '彩色' };
+                const next = { light: 'dark', dark: 'colorful', colorful: 'light' };
+                return '当前' + names[this.theme] + '主题，切换为' + names[next[this.theme]] + '主题';
             },
             listNamePrefix() {
                 // 只按固定顺序组合，勾选先后顺序不影响最终名称。
