@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shidan-v19';
+const CACHE_NAME = 'shidan-v24';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

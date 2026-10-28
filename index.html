@@ -55,7 +55,10 @@
                         <el-checkbox :model-value="item.completed" class="item-checkbox" :aria-label="(item.completed ? '标记为未完成：' : '标记为已完成：') + item.name" @change="toggleItem(item.id)"><span class="item-name">{{ item.name }}</span></el-checkbox>
                         <div class="item-actions">
                             <el-button text class="touch-button" :aria-label="'编辑物品：' + item.name" @click="renameItem(item)"><app-icon name="edit" :size="18"></app-icon></el-button>
-                            <el-button text class="touch-button remove-button" :aria-label="'删除物品：' + item.name" @click="deleteItem(item.id)"><app-icon name="close" :size="18"></app-icon></el-button>
+                            <el-button text class="touch-button remove-button item-delete-button" :class="{ 'is-holding': deleteHoldId === item.id }" :aria-label="'长按2秒删除物品：' + item.name" title="长按2秒删除" @pointerdown="startItemDelete($event, item.id)" @pointermove="moveItemDelete" @pointerup="cancelItemDelete" @pointercancel="cancelItemDelete" @pointerleave="cancelItemDelete" @lostpointercapture="cancelItemDelete" @blur="cancelItemDelete" @keydown.space.prevent="startItemDelete($event, item.id)" @keydown.enter.prevent="startItemDelete($event, item.id)" @keyup.space.prevent="cancelItemDelete" @keyup.enter.prevent="cancelItemDelete" @keydown.esc.prevent="cancelItemDelete" @contextmenu.prevent @click.stop.prevent>
+                                <app-icon name="close" :size="18"></app-icon>
+                                <svg class="delete-progress" viewBox="0 0 80 80" aria-hidden="true"><circle class="delete-progress-track" cx="40" cy="40" r="36"></circle><circle class="delete-progress-value" cx="40" cy="40" r="36" pathLength="100"></circle></svg>
+                            </el-button>
                         </div>
                     </li>
                 </transition-group>

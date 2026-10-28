@@ -6,6 +6,7 @@
     const { createApp, markRaw } = Vue;
     const { ElMessage, ElMessageBox } = ElementPlus;
     let themeTransition = null;
+    let itemDeleteHold = null;
     const ICONS = {
         menu: '<path d="M4 6h16M4 12h16M4 18h16"></path>',
         plus: '<path d="M12 5v14M5 12h14"></path>',
@@ -39,6 +40,7 @@
                 listCreate: { open: false, name: '', date: '', dateYear: null, time: '', useDate: true, useTime: false, useMall: false, error: '', saving: false },
                 timePicker: { open: false, step: 'hour', hour: 0, minute: null },
                 datePicker: { open: false, step: 'month', year: new Date().getFullYear(), month: 1, day: null },
+                deleteHoldId: null,
                 mallOptions: Store.getMallOptions(),
                 mallName: Store.getPreferredMall(),
                 mallMenuOpen: false,
@@ -89,6 +91,7 @@
             else window.addEventListener('load', this.registerServiceWorker, { once: true });
         },
         beforeUnmount() {
+            this.cancelItemDelete();
             if (this.dragCleanup) this.dragCleanup();
             window.removeEventListener('beforeinstallprompt', this.handleInstallPrompt);
             window.removeEventListener('appinstalled', this.handleInstalled);
@@ -101,7 +104,10 @@
                 this.lists = Store.getLists();
                 const storedId = Store.getActiveListId();
                 this.activeListId = this.lists.some(list => list.id === storedId) ? storedId : (this.lists[0]?.id || null);
-                if (this.activeListId !== previousId) this.listActionsOpen = false;
+                if (this.activeListId !== previousId) {
+                    this.listActionsOpen = false;
+                    this.cancelItemDelete();
+                }
             },
             mutate(action) {
                 try {
@@ -253,9 +259,6 @@
             },
             toggleItem(id) {
                 this.mutate(() => Store.toggleItem(this.activeListId, id));
-            },
-            deleteItem(id) {
-                this.mutate(() => Store.deleteItem(this.activeListId, id));
             },
             async copyList() {
                 if (!this.activeList) return;
@@ -458,6 +461,63 @@
                 const grid = this.$refs.dateGrid;
                 const choice = grid?.querySelector('[aria-pressed="true"]') || grid?.querySelector('button');
                 choice?.focus({ preventScroll: true });
+            },
+            startItemDelete(event, itemId) {
+                const keyboard = event.type === 'keydown';
+                if (keyboard ? event.repeat || ![' ', 'Enter'].includes(event.key) : event.button !== 0 || event.isPrimary === false) return;
+                event.preventDefault();
+                event.stopPropagation();
+                this.cancelItemDelete();
+                if (!this.activeList?.items.some(item => item.id === itemId) || document.visibilityState === 'hidden') return;
+                const button = event.currentTarget;
+                button.focus({ preventScroll: true });
+                const hold = {
+                    button, itemId, listId: this.activeListId, pointerId: keyboard ? null : event.pointerId,
+                    bounds: button.getBoundingClientRect(), startedAt: performance.now(), frame: null
+                };
+                itemDeleteHold = hold;
+                this.deleteHoldId = itemId;
+                button.style.setProperty('--delete-progress', '0');
+                if (!keyboard) {
+                    try { button.setPointerCapture(event.pointerId); } catch (error) { /* 指针已结束时由后续取消事件清理。 */ }
+                }
+                window.addEventListener('blur', this.cancelItemDelete);
+                document.addEventListener('visibilitychange', this.cancelItemDelete);
+                const advance = now => {
+                    if (itemDeleteHold !== hold) return;
+                    if (!button.isConnected || this.activeListId !== hold.listId || document.visibilityState === 'hidden') {
+                        this.cancelItemDelete();
+                        return;
+                    }
+                    const progress = Math.min(100, Math.max(0, (now - hold.startedAt) / 20));
+                    button.style.setProperty('--delete-progress', String(progress));
+                    if (progress >= 100) {
+                        this.cancelItemDelete();
+                        if (Store.getList(hold.listId)?.items.some(item => item.id === itemId)) {
+                            this.mutate(() => Store.deleteItem(hold.listId, itemId));
+                        }
+                        return;
+                    }
+                    hold.frame = requestAnimationFrame(advance);
+                };
+                hold.frame = requestAnimationFrame(advance);
+            },
+            moveItemDelete(event) {
+                const hold = itemDeleteHold;
+                if (!hold || event.pointerId !== hold.pointerId) return;
+                const { left, right, top, bottom } = hold.bounds;
+                if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) this.cancelItemDelete();
+            },
+            cancelItemDelete(event) {
+                const hold = itemDeleteHold;
+                if (!hold || (event?.pointerId !== undefined && hold.pointerId !== null && event.pointerId !== hold.pointerId)) return;
+                itemDeleteHold = null;
+                this.deleteHoldId = null;
+                cancelAnimationFrame(hold.frame);
+                window.removeEventListener('blur', this.cancelItemDelete);
+                document.removeEventListener('visibilitychange', this.cancelItemDelete);
+                hold.button.style.removeProperty('--delete-progress');
+                if (hold.pointerId !== null && hold.button.hasPointerCapture?.(hold.pointerId)) hold.button.releasePointerCapture(hold.pointerId);
             }
         }
     });

@@ -124,7 +124,7 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .items-scroll.el-main { padding: 20px 16px 24px; overscroll-behavior-y: contain; }
 .items-list, .drawer-lists { position: relative; list-style: none; padding: 0; margin: 0; }
 .items-list { display: flex; flex-direction: column; gap: 10px; }
-.item-row { display: flex; align-items: center; min-height: 76px; padding: 10px 5px; background: var(--app-soft); border: 1px solid var(--app-border); border-radius: 18px; }
+.item-row { display: flex; align-items: center; min-height: 76px; padding: 10px 9px 10px 5px; background: var(--app-soft); border: 1px solid var(--app-border); border-radius: 18px; }
 .item-checkbox.el-checkbox { flex: 1; min-width: 0; height: auto; min-height: 48px; margin-right: 0; align-items: center; }
 .item-checkbox .el-checkbox__label { min-width: 0; padding-left: 12px; white-space: normal; overflow-wrap: anywhere; line-height: 1.6; color: var(--app-text); font-size: 16px; }
 .item-checkbox .el-checkbox__inner { width: 26px; height: 26px; border-radius: 9px; border-color: var(--el-color-primary-light-5); background: var(--app-surface); }
@@ -140,6 +140,14 @@ button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offse
 .item-actions { display: flex; flex: none; gap: 6px; margin-left: 8px; }
 .item-actions .touch-button { width: 44px; min-width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--app-border); background: var(--el-color-primary-light-9); color: var(--app-control-ink); }
 .item-actions .remove-button.el-button { background: var(--app-danger-soft); color: var(--el-color-danger); }
+.item-actions .item-delete-button.el-button { position: relative; border-radius: 50%; overflow: visible; touch-action: none; user-select: none; -webkit-touch-callout: none; }
+/* 粗环与按钮间留约 11px 空隙，便于按住按钮时从手指周围观察进度。 */
+.item-delete-button .delete-progress { position: absolute; left: 50%; top: 50%; width: 80px; height: 80px; z-index: 2; transform: translate(-50%, -50%) rotate(-90deg); pointer-events: none; opacity: 0; }
+.item-delete-button.is-holding .delete-progress { opacity: 1; }
+.delete-progress circle { fill: none; stroke-width: 6; }
+.delete-progress-track { stroke: var(--el-color-danger); opacity: 0.15; }
+.delete-progress-value { stroke: var(--el-color-danger); stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: calc(100 - var(--delete-progress, 0)); }
+.item-actions .item-delete-button.is-holding { border-color: var(--el-color-danger); }
 .item-actions .touch-button:not(.is-disabled):active { background: var(--el-color-primary-light-8); }
 .item-actions .remove-button:not(.is-disabled):active { background: var(--app-danger-soft); }
 .item-actions .el-icon { transition: transform var(--motion-ui) var(--motion-ease); }
